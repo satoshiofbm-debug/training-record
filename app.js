@@ -1,6 +1,8 @@
 (() => {
   const STORAGE_KEY = "training-record-mvp-v1";
   const SAVE_DELAY = 350;
+  const DATA_LAYER_ENDPOINT = "https://script.google.com/macros/s/AKfycbyCUDeppWhLt_i0E-4t2dp2LI81OqBxqzkibLcab-r_KgXWtwhidd8uX1luGbUcrkBt0g/exec";
+  const DATA_LAYER_TOKEN = "trs-demo-2026";
 
   const conditions = [
     { key: "sleep", label: "睡眠", options: ["good", "normal", "poor"], ja: { good: "良い", normal: "普通", poor: "短い" } },
@@ -612,6 +614,12 @@
       },
     };
     download(`${session.customerId}-${seed.date}-training-record.json`, JSON.stringify(payload, null, 2));
+    fetch(DATA_LAYER_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ token: DATA_LAYER_TOKEN, payload }),
+    }).then(() => toast("データ層に保存しました")).catch(() => toast("保存失敗（オフライン?）"));
     toast("構造化データを書き出しました");
   }
 
