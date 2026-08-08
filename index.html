@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Record TODAY</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true">
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M5 5h8v2H7v10h10v-6h2v8H5V5Zm10 0h4v4h-2V8.4l-6.3 6.3-1.4-1.4L15.6 7H15V5Z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path d="M8 7h11v14H8V7Zm2 2v10h7V9h-7ZM5 3h11v2H7v10H5V3Z"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h12l2 2v16H5V3Zm2 2v14h10V7.8L14.2 5H7Zm2 0h4v5H9V5Zm0 10h6v2H9v-2Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m9.2 16.6-4-4L3.8 14l5.4 5.4L21 7.6 19.6 6 9.2 16.6Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5Z"/></symbol>
+    <symbol id="i-export" viewBox="0 0 24 24"><path d="M11 4h2v8l3-3 1.4 1.4L12 15.8l-5.4-5.4L8 9l3 3V4ZM5 18h14v2H5v-2Z"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3Zm0 4.1 6.6 11.9H5.4L12 7.1ZM11 10h2v5h-2v-5Zm0 6h2v2h-2v-2Z"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="today-panel">
+      <header class="brand-row">
+        <div class="mark">TR</div>
+        <div>
+          <p class="kicker">Today workflow</p>
+          <h1>Training Record</h1>
+        </div>
+      </header>
+
+      <section class="today-summary">
+        <div>
+          <span class="summary-value" id="openCount">0</span>
+          <span class="summary-label">open tabs</span>
+        </div>
+        <div>
+          <span class="summary-value" id="doneCount">0</span>
+          <span class="summary-label">completed</span>
+        </div>
+      </section>
+
+      <div class="session-toolbar">
+        <input id="sessionSearch" type="search" placeholder="client / time / purpose">
+        <button id="openNextBtn" class="icon-action" title="次の未完了セッションを開く">
+          <svg><use href="#i-open"></use></svg>
+        </button>
+      </div>
+
+      <nav id="sessionList" class="session-list" aria-label="Today's sessions"></nav>
+    </aside>
+
+    <main class="work-area">
+      <header class="top-strip">
+        <div>
+          <p class="kicker" id="dateLabel"></p>
+          <h2 id="activeTitle">セッションを開いてください</h2>
+        </div>
+        <div class="top-actions">
+          <button id="copyPreviousBtn" class="secondary-btn">
+            <svg><use href="#i-copy"></use></svg>
+            前回をコピー
+          </button>
+          <button id="saveDraftBtn" class="secondary-btn">
+            <svg><use href="#i-save"></use></svg>
+            下書き保存
+          </button>
+          <button id="completeBtn" class="primary-btn">
+            <svg><use href="#i-check"></use></svg>
+            完了
+          </button>
+        </div>
+      </header>
+
+      <div id="tabRail" class="tab-rail" aria-label="Open client tabs"></div>
+
+      <section id="emptyState" class="empty-state">
+        <h3>今日のセッションからクライアントを開く</h3>
+        <p>左の予定を押すとタブが開きます。複数クライアントの準備を同時に進めても、それぞれの下書きは独立して保存されます。</p>
+      </section>
+
+      <section id="clientWorkspace" class="workspace hidden">
+        <section class="center-pane">
+          <section class="surface client-head">
+            <div>
+              <p class="kicker">Active client</p>
+              <h3 id="clientName"></h3>
+              <p id="clientMeta" class="muted"></p>
+            </div>
+            <div class="status-stack">
+              <span id="draftState" class="state-pill">saved</span>
+              <span id="sessionStatus" class="state-pill muted-pill">not started</span>
+            </div>
+          </section>
+
+          <section class="surface prep-grid">
+            <div>
+              <div class="section-head">
+                <div>
+                  <p class="kicker">Condition</p>
+                  <h3>開始前チェック</h3>
+                </div>
+              </div>
+              <div id="conditionGrid" class="tap-grid"></div>
+            </div>
+            <div>
+              <div class="section-head">
+                <div>
+                  <p class="kicker">Pain</p>
+                  <h3>痛み・違和感</h3>
+                </div>
+              </div>
+              <div class="pain-grid">
+                <input id="painPart" type="text" placeholder="部位">
+                <select id="painSeverity">
+                  <option value="0">なし</option>
+                  <option value="1">1 軽い</option>
+                  <option value="2">2</option>
+                  <option value="3">3 中程度</option>
+                  <option value="4">4</option>
+                  <option value="5">5 強い</option>
+                </select>
+                <input id="painNote" type="text" placeholder="補足">
+              </div>
+            </div>
+          </section>
+
+          <section class="surface">
+            <div class="section-head">
+              <div>
+                <p class="kicker">Workout log</p>
+                <h3>本日のメニューと実績</h3>
+              </div>
+              <div class="compact-actions">
+                <button id="addExerciseBtn" class="secondary-btn small">種目追加</button>
+                <button id="resetWorkoutBtn" class="secondary-btn small">推奨に戻す</button>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="workout-table">
+                <thead>
+                  <tr>
+                    <th>種目</th>
+                    <th>前回</th>
+                    <th>本日の推奨</th>
+                    <th>実績</th>
+                    <th>RPE</th>
+                    <th>RIR</th>
+                    <th>AI判断</th>
+                  </tr>
+                </thead>
+                <tbody id="exerciseRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <aside class="right-pane">
+          <section class="surface">
+            <div class="section-head">
+              <div>
+                <p class="kicker">Goal chain</p>
+                <h3>目標との整合性</h3>
+              </div>
+            </div>
+            <div id="goalChain" class="goal-chain"></div>
+          </section>
+
+          <section class="surface">
+            <div class="section-head">
+              <div>
+                <p class="kicker">History</p>
+                <h3>前回セッション</h3>
+              </div>
+            </div>
+            <div id="historyBox" class="history-box"></div>
+          </section>
+
+          <section class="surface">
+            <div class="section-head">
+              <div>
+                <p class="kicker">Trainer memo</p>
+                <h3>メモと構造化</h3>
+              </div>
+            </div>
+            <textarea id="trainerMemo" rows="7" placeholder="短いメモでOK。例: 睡眠短め。下半身は動き良いが右膝前面に軽い違和感。"></textarea>
+            <div class="memo-actions">
+              <button id="structureMemoBtn" class="secondary-btn small">AI構造化</button>
+              <button id="exportBtn" class="secondary-btn small">
+                <svg><use href="#i-export"></use></svg>
+                export
+              </button>
+            </div>
+            <div id="structuredMemo" class="structured-memo"></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
