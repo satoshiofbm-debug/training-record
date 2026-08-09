@@ -294,6 +294,7 @@
     renderGoalChain(session, draft);
     renderHistory(session, draft);
     renderMemo(draft);
+    hydratePrevious(session, draft);
   }
 
   function renderConditions(draft) {
@@ -737,6 +738,48 @@
   function formatTime(iso) {
     const date = new Date(iso);
     return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  }
+
+  // ---- データ層(読み取り): JSONPでCORSを回避してGET ----
+  function jsonp(params) {
+    return new Promise(function (resolve, reject) {
+      var cb = "__trs_cb_" + (jsonp._n = (jsonp._n || 0) + 1) + "_" + Date.now();
+      var script = document.createElement("script");
+      var qs = Object.keys(params).map(function (k) {
+        return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+      }).join("&");
+      var timer = setTimeout(function () { cleanup(); reject(new Error("jsonp timeout")); }, 8000);
+      function cleanup() { clearTimeout(timer); delete window[cb]; if (script.parentNode) script.parentNode.removeChild(script); }
+      window[cb] = function (data) { cleanup(); resolve(data); };
+      script.onerror = function () { cleanup(); reject(new Error("jsonp error")); };
+      script.src = DATA_LAYER_ENDPOINT + "?" + qs + "&callback=" + cb;
+      document.body.appendChild(script);
+    });
+  }
+
+  // ---- データ層から「前回実績」を取得して種目のprevious表示を更新（無ければシードのまま）----
+  function hydratePrevious(session, draft) {
+    if (!session || !draft || draft._prevRequested) return;
+    draft._prevRequested = true;
+    jsonp({ action: "previous", customer_id: session.customerId }).then(function (res) {
+      var prev = res && res.previous;
+      if (!prev || !prev.exercises || !prev.exercises.length) return;
+      var byName = {};
+      prev.exercises.forEach(function (ex) {
+        var st = (ex.sets && ex.sets[0]) || {};
+        byName[ex.exercise_name] = st.load + " \u00d7 " + st.reps + " \u00d7 " + st.sets + " / RPE" + st.rpe + " RIR" + st.rir;
+      });
+      var hit = false;
+      draft.exercises.forEach(function (ex) {
+        if (byName[ex.name]) { ex.previous = byName[ex.name]; hit = true; }
+      });
+      draft._serverPrevious = prev;
+      var active = getActiveSession();
+      if (hit && active && active.id === session.id) {
+        renderWorkspace();
+        toast("\u524d\u56de\u5b9f\u7e3e\u3092\u30c7\u30fc\u30bf\u5c64\u304b\u3089\u53d6\u5f97\u3057\u307e\u3057\u305f\uff08" + prev.date + "\uff09");
+      }
+    }).catch(function () { /* silent fallback to seed */ });
   }
 
   function download(filename, content) {
